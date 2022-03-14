@@ -1,0 +1,27 @@
+{
+  "name": "linsql",
+  "version": "0.0.1",
+  "description": "使用TS封装node-mysql的常用操作，可链式调用，与ThinkPHP的查询器类似",
+  "main": "index.js",
+  "scripts": {
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/xiaoqiujun/linsql.git"
+  },
+  "keywords": [
+		"mysql",
+		"ts",
+		"node-mysql",
+		"sql",
+		"mysql-query",
+    "linsql",
+    "typescript"
+	],
+  "author": "xiaoqiujun",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/xiaoqiujun/linsql/issues"
+  },
+  "homepage": "https://github.com/xiaoqiujun/linsql#readme"
+}
