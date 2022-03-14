@@ -1,27 +1,58 @@
 {
-  "name": "linsql",
-  "version": "0.0.1",
-  "description": "使用TS封装node-mysql的常用操作，可链式调用，与ThinkPHP的查询器类似",
-  "main": "index.js",
-  "scripts": {
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/xiaoqiujun/linsql.git"
-  },
-  "keywords": [
+	"name": "linsql",
+	"version": "0.0.1",
+	"description": "使用TS封装node-mysql的常用操作，可链式调用，与ThinkPHP的查询器类似",
+	"main": "index.js",
+	"scripts": {
+		"dev": "set NODE_ENV=developemnt && rollup -c rollup.config.js -w",
+		"nodemon:watch": "cross-env nodemon --watch './' -e ts --exec 'ts-node' ./app.ts",
+		"test": "jest",
+		"test:watch": "jest  --watchAll",
+		"build:tsc": "tsc",
+		"build": "tsc && set NODE_ENV=production && rollup -c rollup.config.js"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/xiaoqiujun/linsql.git"
+	},
+	"types": "dist/***.d.ts",
+	"keywords": [
 		"mysql",
 		"ts",
 		"node-mysql",
 		"sql",
 		"mysql-query",
-    "linsql",
-    "typescript"
+		"linsql",
+		"typescript"
 	],
-  "author": "xiaoqiujun",
-  "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/xiaoqiujun/linsql/issues"
-  },
-  "homepage": "https://github.com/xiaoqiujun/linsql#readme"
+	"files": [
+		"index.js"
+	],
+	"author": "xiaoqiujun",
+	"license": "MIT",
+	"bugs": {
+		"url": "https://github.com/xiaoqiujun/linsql/issues"
+	},
+	"homepage": "https://github.com/xiaoqiujun/linsql#readme",
+	"dependencies": {
+		"mysql2": "^2.3.3"
+	},
+	"devDependencies": {
+		"@babel/core": "^7.17.5",
+		"@babel/preset-env": "^7.16.11",
+		"@types/jest": "^27.4.1",
+		"@types/node": "^17.0.21",
+		"cross-env": "^7.0.3",
+		"jest": "^27.5.1",
+		"nodemon": "^2.0.15",
+		"rollup": "^2.70.1",
+		"rollup-plugin-babel": "^4.4.0",
+		"rollup-plugin-commonjs": "^10.1.0",
+		"rollup-plugin-node-resolve": "^5.2.0",
+		"rollup-plugin-typescript": "^1.0.1",
+		"ts-jest": "^27.1.3",
+		"ts-node": "^10.7.0",
+		"tslib": "^2.3.1",
+		"typescript": "^4.6.2"
+	}
 }
