@@ -1,5 +1,4 @@
-import mysql from 'mysql2'
-
+import mysql, { OkPacket, ResultSetHeader, RowDataPacket } from 'mysql2'
 
 export interface PoolOptionBase {
 	// acquireTimeout?: number //连接池超时毫秒数 默认 10000
@@ -36,12 +35,17 @@ export interface ConnectionOptions extends DbOptionBase,PoolOptionBase {
 	flags?:Array<string>
 	ssl?:string|object
 }
-type Config = Record<string, any>
+
+export type Escape = {
+	sql:string,
+	values:any[]
+}
 export default class Db {
 	//数据库实例
 	private static instance: Db = new Db()
 	private static config: mysql.PoolOptions = Object.create(null)
 	private static pool: mysql.Pool
+	private closed: boolean = true	//是否关闭连接
 	public static connect(config: ConnectionOptions): Db {
         const poolOptions:mysql.PoolOptions = {
             ...config,
@@ -56,17 +60,91 @@ export default class Db {
             queueLimit: config.queueLimit || 0,
         }
         this.config = poolOptions
-		this.pool = mysql.createPool(poolOptions)
+		this.pool = mysql.createPool(config)
+		this.instance.closed = false
+		process.on('exit', async (code) => {
+			try { 
+				await this.pool.end()
+				this.instance.closed = true
+			} catch (e) {
+				throw e
+			}
+		})
         return this.instance
 	}
 
+	/**
+	 * 重新创建连接
+	 * @param config 配置
+	 * @returns 
+	 */
+	private async reConnect() {
+		if(!this.closed) return 
+		Db.pool && Db.pool.end()
+		Db.pool = mysql.createPool(Db.config)
+	}
 	/**
 	 * 
 	 * @param key 配置key
 	 * @returns 
 	 */
 	public getConfig(key: string): any {
+		if(!key) return Db.config
 		if(Db.config.hasOwnProperty(key)) return Db.config[key]
 		return null
+	}
+
+	/**
+	 * query查询
+	 * @param options 
+	 * @returns 
+	 */
+	public async query(options:string): Promise<any> {
+		return new Promise<any>((resolve, reject) => {
+			Db.pool.getConnection((err, connection) => {
+				if(err) {
+					this.closed = true
+					this.reConnect()
+					throw err
+				}
+				connection.query(options, (err, result) => {
+					if(err) throw err
+					resolve(result)
+				})
+			})
+		})
+	}
+	/**
+	 * execute查询
+	 * @param options 
+	 * @returns 
+	 */
+	public async exec(options:string): Promise<any> {
+		return new Promise<any>((resolve, reject) => {
+			Db.pool.getConnection((err, connection) => {
+				if(err) {
+					this.closed = true
+					this.reConnect()
+					throw err
+				}
+				connection.execute(options, (err, result) => {
+					if(err) throw err
+					resolve(result)
+				})
+			})
+		})
+	}
+
+	/**
+	 * 格式化
+	 * @param options 
+	 * @returns 
+	 */
+	public format(options: Escape): string {
+		if (Db.pool) {
+			const sql: string = Db.pool.format(options.sql, options.values)
+			return sql
+		}
+		return ''
 	}
 }
