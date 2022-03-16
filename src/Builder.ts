@@ -18,11 +18,10 @@ export type WhereOption = {
     query:string[]  //同个字段多条件查询
     table?:string   //选择的表
 }
-export type TableName = string
+export type Table = string
 export type Alias = Record<string, string>
-export type Join = Record<TableName, [Connection, JoinKey]>
+export type Join = Record<Table, [Connection, JoinKey]>
 export type Connection = string
-export type Table = Array<TableName>
 export type Field = string
 export type Limit = string | number
 export type Group = string
@@ -31,8 +30,8 @@ export type Comment = string
 export type Order = Record<string, string>
 export type Update = Record<string, any>
 export type Insert = Record<string, any>
-export type SQL_AST = {
-    table:Table
+export type QueryAST = {
+    table:Array<Table>
     alias:Alias
     where:Array<WhereOption>
     field:Field
