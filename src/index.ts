@@ -1,11 +1,20 @@
-/**
- * @version: v1.0.0
- * @author: xiaoqiujun
- * @Github: https://github.com/xiaoqiujun
- * @date: Do not edit
- * @LastEditors: xiaoqiujun
- * @LastEditTime: 2022-03-14 16:52:32
- * @FilePath: \linsql\src\index.ts
- */
+import { ConnectionOptions,PoolOptionBase,DbOptionBase,Escape } from './Db';
+import MySQL from './Query';
+export {
+	Field,
+	JoinType,
+	Logic,
+	OrderType,
+	Table,
+} from "./Builder";
 
-export const sum = (a: number, b: number) => a + b
+export default class Db {
+    private static instance:MySQL
+    public static connect(config:ConnectionOptions) {
+		if(!this.instance) {
+			this.instance = new MySQL(config);
+		}
+		return this.instance
+	}
+}
+export { MySQL,ConnectionOptions,PoolOptionBase,DbOptionBase,Escape }

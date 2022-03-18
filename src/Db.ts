@@ -1,5 +1,6 @@
-import mysql, { OkPacket, ResultSetHeader, RowDataPacket } from 'mysql2'
-
+import  mysql, { Pool, PoolOptions } from 'mysql2'
+import { empty, isStr } from './utils'
+console.log(mysql)
 export interface PoolOptionBase {
 	// acquireTimeout?: number //连接池超时毫秒数 默认 10000
 	waitForConnections?: boolean    //指定连接池在没有可用连接、连接数已达到限制时的操作 true
@@ -43,11 +44,11 @@ export type Escape = {
 export default class Db {
 	//数据库实例
 	private static instance: Db = new Db()
-	private static config: mysql.PoolOptions = Object.create(null)
-	private static pool: mysql.Pool
+	private static config: PoolOptions = Object.create(null)
+	private static pool: Pool
 	private closed: boolean = true	//是否关闭连接
 	public static connect(config: ConnectionOptions): Db {
-        const poolOptions:mysql.PoolOptions = {
+        const poolOptions:PoolOptions = {
             ...config,
             host:config.host || "localhost",
             database:config.database || "root",
@@ -94,12 +95,14 @@ export default class Db {
 		return null
 	}
 
+	public async query(sql:string): Promise<any>;
+	public async query(sql:string, values:any[]): Promise<any>;
 	/**
 	 * query查询
 	 * @param options 
 	 * @returns 
 	 */
-	public async query(options:string): Promise<any> {
+	public async query(sql:string, values?:any[]): Promise<any> {
 		return new Promise<any>((resolve, reject) => {
 			Db.pool.getConnection((err, connection) => {
 				if(err) {
@@ -107,19 +110,28 @@ export default class Db {
 					this.reConnect()
 					throw err
 				}
-				connection.query(options, (err, result) => {
-					if(err) throw err
-					resolve(result)
-				})
+				if(empty(values)) {
+					connection.query(sql, (err, result) => {
+						if(err) throw err
+						resolve(result)
+					})
+				}else {
+					connection.query(sql, values, (err, result) => {
+						if(err) throw err
+						resolve(result)
+					})
+				}
 			})
 		})
 	}
+	public async exec(sql:string): Promise<any>;
+	public async exec(sql:string, values:any[]): Promise<any>;
 	/**
 	 * execute查询
 	 * @param options 
 	 * @returns 
 	 */
-	public async exec(options:string): Promise<any> {
+	public async exec(sql:string, values?:any[]): Promise<any> {
 		return new Promise<any>((resolve, reject) => {
 			Db.pool.getConnection((err, connection) => {
 				if(err) {
@@ -127,10 +139,17 @@ export default class Db {
 					this.reConnect()
 					throw err
 				}
-				connection.execute(options, (err, result) => {
-					if(err) throw err
-					resolve(result)
-				})
+				if(empty(values)) {
+					connection.execute(sql, (err, result) => {
+						if(err) throw err
+						resolve(result)
+					})
+				}else {
+					connection.execute(sql, values, (err, result) => {
+						if(err) throw err
+						resolve(result)
+					})
+				}
 			})
 		})
 	}

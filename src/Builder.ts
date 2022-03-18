@@ -9,7 +9,9 @@ import {
     empty
 } from './utils'
 import {Escape} from './Db';
-export type JoinKey = 'INNER' | 'LEFT' | 'RIGHT' | 'FULL'
+export type JoinType = 'INNER' | 'LEFT' | 'RIGHT' | 'FULL'
+export type OrderType = "DESC" | "ASC"
+export type Logic = 'AND' | 'OR'
 export type WhereOption = {
     field:string[] //查询的字段
     operator:Record<string, string[]>    //表达式
@@ -18,19 +20,20 @@ export type WhereOption = {
     query:string[]  //同个字段多条件查询
     table?:string   //选择的表
 }
+export type WhereQuery = string|number|Array<any>|Array<Array<any>>
 export type Table = string
 export type Alias = Record<string, string>
-export type Join = Record<Table, [Connection, JoinKey]>
+export type Join = Record<Table, [Connection, JoinType]>
 export type Connection = string
 export type Field = string
 export type Limit = string | number
 export type Group = string
 export type Direction = boolean
 export type Comment = string
-export type Order = Record<string, string>
+export type Order = Record<Field, OrderType>
 export type Update = Record<string, any>
 export type Insert = Record<string, any>
-export type QueryAST = {
+export type QueryCollection = {
     table:Array<Table>
     alias:Alias
     where:Array<WhereOption>
@@ -45,6 +48,7 @@ export type QueryAST = {
     comment:Comment
     update:Update
     insert:Insert | Array<Insert>
+	link:string[]  //
 }
 export default class Builder {
 	private sql: string = ''
@@ -76,16 +80,16 @@ export default class Builder {
 	/**
 	 * 解析查询
 	 */
-	protected buildQuery($options: any): Escape {
-		let where: Escape = this.buildWhere($options['where'], $options['keyword'], $options['alias'])
-		let table: string = this.buildTable($options['table'], $options['alias'])
-		let field: string = this.buildField($options['field'])
-		let join: string = this.buildJoin($options['join'], $options['alias'])
-		let group: string = this.buildGroup($options['group'])
-		let order: string = this.buildOrder($options['order'])
-		let limit: string = this.buildLimit($options['limit'])
-		let distinct: string = $options['distinct'] === true ? 'DISTINCT' : ''
-		let comment: string = $options['comment'] || ''
+	protected buildQuery($options: Partial<QueryCollection>): Escape {
+		let where: Escape = this.buildWhere($options.where, $options.link, $options.alias)
+		let table: string = this.buildTable($options.table || [], $options.alias || {})
+		let field: string = this.buildField($options.field)
+		let join: string = this.buildJoin($options.join || {}, $options.alias || {})
+		let group: string = this.buildGroup($options.group)
+		let order: string = this.buildOrder($options.order)
+		let limit: string = this.buildLimit($options.limit)
+		let distinct: string = $options.distinct === true ? 'DISTINCT' : ''
+		let comment: string = $options.comment || ''
 		const sql: string[] = [
 			`SELECT`,
 			`${distinct}`,
@@ -280,7 +284,7 @@ export default class Builder {
 	/**
 	 * 解析order by
 	 */
-	private buildOrder(orders: Record<string, any>): string {
+	private buildOrder(orders: Order = {}): string {
 		let order: string = 'ORDER BY '
 		let map: string[] = []
 		let keys: string[] = toKeys(orders)
@@ -295,7 +299,7 @@ export default class Builder {
 			if (!map.includes(name)) map.push(`${name} ${orders[item]}`)
 		})
 		order += `${map.join(',')}`
-		return !orders ? '' : order
+		return !orders || !keys.length ? '' : order
 	}
 
 	/**
