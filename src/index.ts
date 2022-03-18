@@ -1,5 +1,5 @@
 import { ConnectionOptions,PoolOptionBase,DbOptionBase,Escape } from './Db';
-import MySQL from './Query';
+import LinSQL from './Query';
 export {
 	Field,
 	JoinType,
@@ -8,13 +8,13 @@ export {
 	Table,
 } from "./Builder";
 
-export default class Db {
-    private static instance:MySQL
+export default class linsql {
+    private static instance:LinSQL
     public static connect(config:ConnectionOptions) {
 		if(!this.instance) {
-			this.instance = new MySQL(config);
+			this.instance = new LinSQL(config);
 		}
 		return this.instance
 	}
 }
-export { MySQL,ConnectionOptions,PoolOptionBase,DbOptionBase,Escape }
+export { LinSQL,ConnectionOptions,PoolOptionBase,DbOptionBase,Escape }
