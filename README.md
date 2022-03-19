@@ -53,7 +53,7 @@ const db = linsql.connect({
 	database: 'school',
 	prefix: 'sc_'
 })
-db.name('teacher').where('username', '').select().then(res => {
+db.name('teacher').where('username', '').select((rows) => {
 	//return [rows]
 })
 ```

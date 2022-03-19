@@ -17,7 +17,7 @@ export default {
 	input: "./src/index.ts",
 	output: {
 		// 打包出口
-		file: "./index.js",
+		file: "./dist/index.js",
         name:name,
 		format:"umd",
 		banner
