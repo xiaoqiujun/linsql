@@ -237,23 +237,23 @@ export default class Query extends Builder {
 	/**
 	 * @returns 返回只有一条结果的查询
 	 */
-	public async find<T extends any>(): Promise<T | null> {
+	public async find<T = any>(callback?: (data:T | null) => void): Promise<T | void | null> {
 		this.collection.select = true;
 		this.collection.limit = 1;
 		const query: Escape = this.buildQuery(this.collection);
 		const [rows]: [[T]] = await Query.connection.query(query.sql, query.values);
 		this.clear();
-		return rows[0] || null;
+		return callback ? callback(rows[0] || null) : rows[0] || null;
 	}
 	/**
 	 * @returns 返回多条结果的查询
 	 */
-	public async select<T extends any>(): Promise<T | []> {
+	public async select<T = any>(callback?: (rows:T[] | []) => void): Promise<T[] | void> {
 		this.collection.select = true;
 		const query: Escape = this.buildQuery(this.collection);
-		const [rows]: [T] = await Query.connection.query(query.sql, query.values);
+		const [rows]: [T[]] = await Query.connection.query(query.sql, query.values);
 		this.clear();
-		return rows || [];
+		return callback ? callback(rows || []) : rows || [];
 	}
 	/**
 	 *
@@ -436,7 +436,7 @@ export default class Query extends Builder {
 	 * @param condition 条件
 	 * ('id', 1) 等价于 id = 1
 	 */
-	public whereOr(fields: Field, condition: string | number): void;
+	public whereOr(fields: Field, condition: string | number): Query;
 	/**
 	 *
 	 * @param fields 查询的字段
@@ -444,13 +444,13 @@ export default class Query extends Builder {
 	 * @param condition 条件
 	 * ('id', '<>' 1) 等价于 id <> 1
 	 */
-	public whereOr(fields: Field, operator: string, condition: string | number): void;
+	public whereOr(fields: Field, operator: string, condition: string | number): Query;
 	/**
 	 *
 	 * @param fields 查询的字段
 	 * ({'id',1}) 等价于 id = 1  ({'id':['<>',1]}) 等价于 id <> 1
 	 */
-	public whereOr(fields: Record<string, WhereQuery>): void;
+	public whereOr(fields: Record<string, WhereQuery>): Query;
 	/**
 	 * @param fields 查询的字段			'id'  id  {id:['=', 1]}
 	 * @param operator 查询的表达式	1	<>
@@ -476,7 +476,7 @@ export default class Query extends Builder {
 	 * @param condition 条件
 	 * ('id', 1) 等价于 id = 1
 	 */
-	public where(fields: Field, condition: string | number): void;
+	public where(fields: Field, condition: string | number): Query;
 	/**
 	 *
 	 * @param fields 查询的字段
@@ -484,13 +484,13 @@ export default class Query extends Builder {
 	 * @param condition 条件
 	 * ('id', '<>' 1) 等价于 id <> 1
 	 */
-	public where(fields: Field, operator: string, condition: string | number): void;
+	public where(fields: Field, operator: string, condition: string | number): Query;
 	/**
 	 *
 	 * @param fields 查询的字段
 	 * ({'id',1}) 等价于 id = 1  ({'id':['<>',1]}) 等价于 id <> 1
 	 */
-	public where(fields: Record<string, WhereQuery>): void;
+	public where(fields: Record<string, WhereQuery>): Query;
 	/**
 	 * @param fields 查询的字段			'id'  id  {id:['=', 1]}
 	 * @param operator 查询的表达式	1	<>
