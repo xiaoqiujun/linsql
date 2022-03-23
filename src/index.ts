@@ -1,5 +1,6 @@
 import { ConnectionOptions,PoolOptionBase,DbOptionBase,Escape } from './Db';
 import LinSQL from './Query';
+export {RowRecord} from './Query'
 export {
 	Field,
 	JoinType,

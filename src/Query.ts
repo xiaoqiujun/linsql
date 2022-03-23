@@ -16,6 +16,11 @@ import Builder, {
 import Db, { ConnectionOptions, Escape } from "./Db";
 import { empty, isArray, isObj, isPrimitive, isStr, toKeys, toUpperCase } from "./utils";
 
+export type RowRecord = {
+	affectedRows:number
+	insertId:number
+}
+
 export default class Query extends Builder {
 	// // 数据库Connection对象实例
 	private static connection: Db;
@@ -237,23 +242,23 @@ export default class Query extends Builder {
 	/**
 	 * @returns 返回只有一条结果的查询
 	 */
-	public async find<T = any>(callback?: (data:T | null) => void): Promise<T | void | null> {
+	public async find<T = any>(): Promise<T> {
 		this.collection.select = true;
 		this.collection.limit = 1;
 		const query: Escape = this.buildQuery(this.collection);
 		const [rows]: [[T]] = await Query.connection.query(query.sql, query.values);
 		this.clear();
-		return callback ? callback(rows[0] || null) : rows[0] || null;
+		return rows[0];
 	}
 	/**
 	 * @returns 返回多条结果的查询
 	 */
-	public async select<T = any>(callback?: (rows:T[] | []) => void): Promise<T[] | void> {
+	public async select<T = any>(): Promise<T[]> {
 		this.collection.select = true;
 		const query: Escape = this.buildQuery(this.collection);
-		const [rows]: [T[]] = await Query.connection.query(query.sql, query.values);
+		const [rows]:[T[]] = await Query.connection.query(query.sql, query.values);
 		this.clear();
-		return callback ? callback(rows || []) : rows || [];
+		return rows || [];
 	}
 	/**
 	 *
@@ -263,6 +268,8 @@ export default class Query extends Builder {
 	 *    'age': 25,
 	 *    'status':0
 	 * }
+	 * 更新数据
+	 * @returns {number} 返回更新的id
 	 */
 	public async update(field: Update): Promise<number> {
 		this.collection.update = field;
@@ -271,6 +278,10 @@ export default class Query extends Builder {
 		this.clear();
 		return rows.affectedRows || 0;
 	}
+	/**
+	 * 删除数据
+	 * @returns {number} 返回删除的id
+	 */
 	public async delete(): Promise<number> {
 		this.collection.delete = true;
 		const query: Escape = this.buildDelete(this.collection, this.tables);
@@ -278,7 +289,11 @@ export default class Query extends Builder {
 		this.clear();
 		return rows.affectedRows || 0;
 	}
-	public async insert(data: Insert | Array<Insert>): Promise<any> {
+	/**
+	 * 插入数据
+	 * @returns {RowRecord} 
+	 */
+	public async insert(data: Insert | Array<Insert>): Promise<RowRecord> {
 		this.collection.insert = data;
 		const query: Escape = this.buildInsert(this.collection, this.tables);
 		const [rows] = await Query.connection.query(query.sql, query.values);
