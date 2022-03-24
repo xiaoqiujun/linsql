@@ -1,14 +1,13 @@
 import  mysql, { Pool, PoolOptions } from 'mysql2'
 import { empty, isStr } from './utils'
-console.log(mysql)
-export interface PoolOptionBase {
+export interface BasePoolOptions {
 	// acquireTimeout?: number //连接池超时毫秒数 默认 10000
 	waitForConnections?: boolean    //指定连接池在没有可用连接、连接数已达到限制时的操作 true
 	connectionLimit?: number //一次允许创建的最大连接数 10
 	queueLimit?: number //连接池允许排队的最大连接请求数 0
 }
 
-export interface DbOptionBase {
+export interface BaseDbOptions {
 	host: string
 	database: string
 	user: string
@@ -16,7 +15,7 @@ export interface DbOptionBase {
     port?:number
 }
 
-export interface ConnectionOptions extends DbOptionBase,PoolOptionBase {
+export interface ConnectionOptions extends BaseDbOptions,BasePoolOptions {
 	charset?: string //用于连接的字符集 默认 'UTF8_GENERAL_CI'
 	prefix?: string //前缀
 	connectTimeout?: number //初次连接到 MySQL 服务器允许的超时毫秒数 10000
