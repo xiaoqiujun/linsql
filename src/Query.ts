@@ -246,9 +246,9 @@ export default class Query extends Builder {
 		this.collection.select = true;
 		this.collection.limit = 1;
 		const query: Escape = this.buildQuery(this.collection);
-		const [rows]: [[T]] = await Query.connection.query(query.sql, query.values);
+		const [rows]:[T] = await Query.connection.query(query.sql, query.values);
 		this.clear();
-		return rows[0];
+		return rows;
 	}
 	/**
 	 * @returns 返回多条结果的查询
@@ -256,7 +256,7 @@ export default class Query extends Builder {
 	public async select<T = any>(): Promise<T[]> {
 		this.collection.select = true;
 		const query: Escape = this.buildQuery(this.collection);
-		const [rows]:[T[]] = await Query.connection.query(query.sql, query.values);
+		const rows:T[] = await Query.connection.query(query.sql, query.values);
 		this.clear();
 		return rows || [];
 	}
