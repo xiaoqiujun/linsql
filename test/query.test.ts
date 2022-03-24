@@ -23,4 +23,13 @@ describe('Query', () => {
         const map = db.getEscapMap()
         expect(map.sql).toBe("SELECT * FROM t_table1 WHERE `id` = ?")
     })
+
+    test("db.name('admin').where({username: '1',})", () => {
+        db.name('admin').where({
+            username: "1",
+        })
+        console.log(db.getEscapMap())
+        const map = db.getEscapMap()
+        expect(map.sql).toBe("SELECT * FROM t_admin WHERE `username` = ?")
+    })
 })

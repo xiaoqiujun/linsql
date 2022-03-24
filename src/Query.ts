@@ -14,7 +14,7 @@ import Builder, {
 	WhereQuery,
 } from "./Builder";
 import Db, { ConnectionOptions, Escape } from "./Db";
-import { empty, isArray, isObj, isPrimitive, isStr, toKeys, toUpperCase } from "./utils";
+import { empty, isArray, isBool, isInt, isObj, isPrimitive, isStr, toKeys, toUpperCase } from "./utils";
 
 export type RowRecord = {
 	affectedRows:number
@@ -387,14 +387,14 @@ export default class Query extends Builder {
 			// })
 			const allFields: Field[] = toKeys(fields); //获取查询的所有字段
 			allFields.forEach((field: Field) => {
-				let value: WhereQuery = field[field];
+				let value: WhereQuery = fields[field];
 				if (field.indexOf(".") < 0) wheres.field.push(field);
-				if (isStr(value)) value = [value]; //如果是字符串 就把字符串转化成[]
+				if (isStr(value) || isInt(value) || isBool(value)) value = [value]; //如果是基础类型 就把字符串转化成[]
 				if (isArray(value) && Array<any>(value).length) {
 					//值为数组
-					if (!isArray(wheres.operator[field])) wheres.operator[field] = [];
-					if (!isArray(wheres.condition[field])) wheres.condition[field] = [];
-					if (!isArray(wheres.link[field])) wheres.link[field] = [];
+					if (empty(wheres.operator[field]) || !isArray(wheres.operator[field])) wheres.operator[field] = [];
+					if (empty(wheres.condition[field]) || !isArray(wheres.condition[field])) wheres.condition[field] = [];
+					if (empty(wheres.link[field]) || !isArray(wheres.link[field])) wheres.link[field] = [];
 					switch (Array<any>(value).length) {
 						case 1: //如果长度为1的数组 ['标题']
 							wheres.operator[field].push("="); //表达式默认 =
