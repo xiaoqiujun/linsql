@@ -253,12 +253,12 @@ export default class Query extends Builder {
 	/**
 	 * @returns 返回多条结果的查询
 	 */
-	public async select<T = any>(): Promise<T[]> {
+	public async select<T extends Array<T>>(): Promise<T> {
 		this.collection.select = true;
 		const query: Escape = this.buildQuery(this.collection);
-		const rows:T[] = await Query.connection.query(query.sql, query.values);
+		const rows:T = await Query.connection.query(query.sql, query.values);
 		this.clear();
-		return rows || [];
+		return rows;
 	}
 	/**
 	 *
@@ -525,14 +525,22 @@ export default class Query extends Builder {
 		}
 		return this;
 	}
+
+	public virtual() {
+		
+	}
+
 	/**
 	 * mysql.query
 	 * @param sql mysql语句
 	 * @returns Promise<{rows:any, fields:any}>
 	 */
-	public async query(sql: string): Promise<{ rows: any; fields: any }> {
-		const [rows, fields] = await Query.connection.query(sql);
-		return { rows, fields };
+	public async query<T>(sql: string, values?:any[]): Promise<T> {
+		if(values === undefined) {
+			return await Query.connection.query<T>(sql);
+		}else {
+			return await Query.connection.query<T>(sql,values);
+		}
 	}
 
 	/**
@@ -541,13 +549,11 @@ export default class Query extends Builder {
 	 * @param values 参数化
 	 * @returns
 	 */
-	public async exec(sql: string, values?: any[]): Promise<{ rows: any; fields: any }> {
+	public async exec<T>(sql: string, values?: any[]): Promise<T> {
 		if (values !== undefined) {
-			const [rows, fields] = await Query.connection.exec(sql, values);
-			return { rows, fields };
+			return await Query.connection.exec<T>(sql, values);
 		}
-		const [rows, fields] = await Query.connection.exec(sql);
-		return { rows, fields };
+		return await Query.connection.exec<T>(sql);
 	}
 	public format(sql: string, values: any[]): string {
 		return Query.connection.format({

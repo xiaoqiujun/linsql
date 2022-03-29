@@ -93,15 +93,14 @@ export default class Db {
 		if(Db.config.hasOwnProperty(key)) return Db.config[key]
 		return null
 	}
-
-	public async query(sql:string): Promise<any>;
-	public async query(sql:string, values:any[]): Promise<any>;
+	public async query<T>(sql:string): Promise<T>;
+	public async query<T>(sql:string, values:any[]): Promise<T>;
 	/**
 	 * query查询
 	 * @param options 
 	 * @returns 
 	 */
-	public async query(sql:string, values?:any[]): Promise<any> {
+	public async query<T>(sql:string, values?:any[]): Promise<T> {
 		return new Promise<any>((resolve, reject) => {
 			Db.pool.getConnection((err, connection) => {
 				if(err) {
@@ -123,14 +122,14 @@ export default class Db {
 			})
 		})
 	}
-	public async exec(sql:string): Promise<any>;
-	public async exec(sql:string, values:any[]): Promise<any>;
+	public async exec<T>(sql:string): Promise<T>;
+	public async exec<T>(sql:string, values:any[]): Promise<T>;
 	/**
 	 * execute查询
 	 * @param options 
 	 * @returns 
 	 */
-	public async exec(sql:string, values?:any[]): Promise<any> {
+	public async exec<T>(sql:string, values?:any[]): Promise<T> {
 		return new Promise<any>((resolve, reject) => {
 			Db.pool.getConnection((err, connection) => {
 				if(err) {
