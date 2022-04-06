@@ -253,7 +253,7 @@ export default class Query extends Builder {
 	/**
 	 * @returns 返回多条结果的查询
 	 */
-	public async select<T extends Array<T>>(): Promise<T> {
+	public async select<T extends object[]>(): Promise<T> {
 		this.collection.select = true;
 		const query: Escape = this.buildQuery(this.collection);
 		const rows:T = await Query.connection.query(query.sql, query.values);
