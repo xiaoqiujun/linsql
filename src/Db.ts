@@ -108,6 +108,7 @@ export default class Db {
 					this.reConnect()
 					throw err
 				}
+				connection.release()	//释放
 				if(empty(values)) {
 					connection.query(sql, (err, result) => {
 						if(err) throw err
@@ -119,6 +120,7 @@ export default class Db {
 						resolve(result)
 					})
 				}
+				
 			})
 		})
 	}
@@ -137,6 +139,7 @@ export default class Db {
 					this.reConnect()
 					throw err
 				}
+				connection.release()	//释放
 				if(empty(values)) {
 					connection.execute(sql, (err, result) => {
 						if(err) throw err
