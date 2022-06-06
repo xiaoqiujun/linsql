@@ -274,7 +274,7 @@ export default class Query extends Builder {
 	public async update(field: Update): Promise<number> {
 		this.collection.update = field;
 		const query: Escape = this.buildUpdate(this.collection, this.tables);
-		const [rows] = await Query.connection.query(query.sql, query.values);
+		const rows:RowRecord = await Query.connection.query(query.sql, query.values);
 		this.clear();
 		return rows.affectedRows || 0;
 	}
@@ -285,7 +285,7 @@ export default class Query extends Builder {
 	public async delete(): Promise<number> {
 		this.collection.delete = true;
 		const query: Escape = this.buildDelete(this.collection, this.tables);
-		const [rows] = await Query.connection.query(query.sql, query.values);
+		const rows:RowRecord = await Query.connection.query(query.sql, query.values);
 		this.clear();
 		return rows.affectedRows || 0;
 	}
@@ -296,14 +296,14 @@ export default class Query extends Builder {
 	public async insert(data: Insert | Array<Insert>): Promise<RowRecord> {
 		this.collection.insert = data;
 		const query: Escape = this.buildInsert(this.collection, this.tables);
-		const [rows] = await Query.connection.query(query.sql, query.values);
+		const rows:RowRecord = await Query.connection.query(query.sql, query.values);
 		this.clear();
-		return { affectedRows: rows.affectedRows || 0, insertId: rows.insertId || null };
+		return { affectedRows: rows.affectedRows || 0, insertId: rows.insertId || 0 };
 	}
 	public async insertGetId(data: Insert | Array<Insert>): Promise<number> {
 		if (isArray(data)) data = data[0]; //insertGetId 只取一个
 		try {
-			const res: any = await this.insert(data);
+			const res: RowRecord = await this.insert(data);
 			return res.insertId;
 		} catch (err) {
 			throw err;
