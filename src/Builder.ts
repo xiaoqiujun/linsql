@@ -249,7 +249,7 @@ export default class Builder {
 			let name: string = item
 			let condition: string = config[item][0]
 			let joinType: string = config[item][1]
-			let filter: string[] = alias.filter((key) => table.includes(alias[key]))
+			let filter: string[] = aliasTable.filter((key) => table.includes(alias[key]))
 			each(filter, (v) => {
 				if (alias[v] === item) {
 					name = `${item} ${v}`
