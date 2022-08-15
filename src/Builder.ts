@@ -218,7 +218,7 @@ export default class Builder {
 		if (table.length) {
 			aliasTable.forEach((item) => {
 				let name: string = alias[item]
-				let index: number = alias.indexOf(name)
+				let index: number = table.indexOf(name)
 				if (index > -1) {
 					table[index] = `${table[index]} ${item}`        //table1 a, table2 b
 				}
