@@ -13,7 +13,7 @@ import Builder, {
 	WhereOption,
 	WhereQuery,
 } from "./Builder";
-import Db, { ConnectionOptions, Escape } from "./Db";
+import Db, { ConnectionOptions, ParseCondition } from "./Db";
 import { empty, isArray, isBool, isInt, isObj, isPrimitive, isStr, toKeys, toUpperCase } from "./utils";
 
 export type RowRecord = {
@@ -53,21 +53,21 @@ export default class Query extends Builder {
 		this.names = names;
 		if (isStr(names)) {
 			//只选择一张表查询
-			let name: Table = `${this.prefix}${names}`;
-			let split: string[] = (names as Table).split(/\s+/); //是否设置了别名
-			if (split.length === 2) {
+			let name: Table = `${this.prefix}${names}`;		//t_table1
+			let split: string[] = (names as Table).split(/\s+/); //是否设置了别名	table1 t1
+			if (split.length === 2) {	//强制条件 只有table1 t1格式才配置别名
 				name = `${this.prefix}${split[0]}`;
-				alias[split[1]] = name;
+				alias[split[1]] = name;		//填充表别名 {t1:t_table1}保存起来
 			}
-			this.tables = name;
-			if (!table.includes(name)) table.push(name);
+			this.tables = name;	//	把表名保存下来
+			if (!table.includes(name)) table.push(name);	//读取收集器里的表名集合 追加
 		} else if (isArray(names)) {
 			//选择多张表
 			(names as Array<Table>).forEach((item) => {
 				//['table1 a', 'table2 b'] ['table1', 'table2']
-				let name: Table = `${this.prefix}${item}`;
-				let split: string[] = (item as string).split(/\s+/);
-				if (split.length === 2) {
+				let name: Table = `${this.prefix}${item}`;	//表名
+				let split: string[] = (item as string).split(/\s+/);	//是否设置了别名
+				if (split.length === 2) {	//强制条件
 					name = `${this.prefix}${split[0]}`;
 					if (this.prefix && split[0].split(this.prefix).length !== 2) {
 						//name('table') 不包含表前缀的
@@ -77,6 +77,7 @@ export default class Query extends Builder {
 				}
 				if (!table.includes(name)) table.push(name);
 			});
+			this.tables = table[0]
 		}
 		this.collection.table = table;
 		this.collection.alias = alias;
@@ -245,7 +246,7 @@ export default class Query extends Builder {
 	public async find<T = any>(): Promise<T> {
 		this.collection.select = true;
 		this.collection.limit = 1;
-		const query: Escape = this.buildQuery(this.collection);
+		const query: ParseCondition = this.buildQuery(this.collection);
 		const [rows]:[T] = await Query.connection.query(query.sql, query.values);
 		this.clear();
 		return rows;
@@ -255,7 +256,7 @@ export default class Query extends Builder {
 	 */
 	public async select<T extends object[]>(): Promise<T> {
 		this.collection.select = true;
-		const query: Escape = this.buildQuery(this.collection);
+		const query: ParseCondition = this.buildQuery(this.collection);
 		const rows:T = await Query.connection.query(query.sql, query.values);
 		this.clear();
 		return rows;
@@ -273,7 +274,7 @@ export default class Query extends Builder {
 	 */
 	public async update(field: Update): Promise<number> {
 		this.collection.update = field;
-		const query: Escape = this.buildUpdate(this.collection, this.tables);
+		const query: ParseCondition = this.buildUpdate(this.collection, this.tables);
 		const rows:RowRecord = await Query.connection.query(query.sql, query.values);
 		this.clear();
 		return rows.affectedRows || 0;
@@ -284,7 +285,7 @@ export default class Query extends Builder {
 	 */
 	public async delete(): Promise<number> {
 		this.collection.delete = true;
-		const query: Escape = this.buildDelete(this.collection, this.tables);
+		const query: ParseCondition = this.buildDelete(this.collection, this.tables);
 		const rows:RowRecord = await Query.connection.query(query.sql, query.values);
 		this.clear();
 		return rows.affectedRows || 0;
@@ -295,7 +296,7 @@ export default class Query extends Builder {
 	 */
 	public async insert(data: Insert | Array<Insert>): Promise<RowRecord> {
 		this.collection.insert = data;
-		const query: Escape = this.buildInsert(this.collection, this.tables);
+		const query: ParseCondition = this.buildInsert(this.collection, this.tables);
 		const rows:RowRecord = await Query.connection.query(query.sql, query.values);
 		this.clear();
 		return { affectedRows: rows.affectedRows || 0, insertId: rows.insertId || 0 };
@@ -388,7 +389,7 @@ export default class Query extends Builder {
 			const allFields: Field[] = toKeys(fields); //获取查询的所有字段
 			allFields.forEach((field: Field) => {
 				let value: WhereQuery = fields[field];
-				if (field.indexOf(".") < 0) wheres.field.push(field);
+				wheres.field.push(field);
 				if (isStr(value) || isInt(value) || isBool(value)) value = [value]; //如果是基础类型 就把字符串转化成[]
 				if (isArray(value) && Array<any>(value).length) {
 					//值为数组
@@ -555,7 +556,13 @@ export default class Query extends Builder {
 		}
 		return await Query.connection.exec<T>(sql);
 	}
-	public format(sql: string, values: any[]): string {
+	/**
+	 * @description 转换成转义后的语句
+	 * @param sql mysql查询语句
+	 * @param values 参数化转义
+	 * @returns 
+	 */
+	public transform(sql: string, values: any[]): string {
 		return Query.connection.format({
 			sql,
 			values,
@@ -566,11 +573,19 @@ export default class Query extends Builder {
 		this.names = "";
 		this.tables = "";
 	}
-	public getAST(): Partial<QueryCollection> {
+	/**
+	 * 
+	 * @returns {QueryCollection} 返回收集器数据
+	 */
+	public getCollection(): Partial<QueryCollection> {
 		return this.collection;
 	}
-	public getEscapMap(): Escape {
-		const query: Escape = this.buildQuery(this.collection);
+	/**
+	 * @description 解析收集器
+	 * @returns {ParseCondition}
+	 */
+	public parse(): ParseCondition {
+		const query: ParseCondition = this.buildQuery(this.collection);
 		return query
 	}
 }

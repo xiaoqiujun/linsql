@@ -6,9 +6,10 @@ import {
 	each,
 	has,
 	toLowerCase,
-    empty
+    empty,
+	isStr
 } from './utils'
-import {Escape} from './Db';
+import {ParseCondition} from './Db';
 export type JoinType = 'INNER' | 'LEFT' | 'RIGHT' | 'FULL'
 export type OrderType = "DESC" | "ASC"
 export type Logic = 'AND' | 'OR'
@@ -80,8 +81,8 @@ export default class Builder {
 	/**
 	 * 解析查询
 	 */
-	protected buildQuery($options: Partial<QueryCollection>): Escape {
-		let where: Escape = this.buildWhere($options.where, $options.link, $options.alias)
+	protected buildQuery($options: Partial<QueryCollection>): ParseCondition {
+		let where: ParseCondition = this.buildWhere($options.where, $options.link, $options.alias)
 		let table: string = this.buildTable($options.table || [], $options.alias || {})
 		let field: string = this.buildField($options.field)
 		let join: string = this.buildJoin($options.join || {}, $options.alias || {})
@@ -111,7 +112,7 @@ export default class Builder {
 	/**
 	 * 解析查询语句
 	 */
-	private buildWhere(whereOption: Array<WhereOption> = [], query: string[] = [], alias?:Record<string, any>): Escape {
+	private buildWhere(whereOption: Array<WhereOption> = [], query: string[] = [], alias?:Record<string, any>): ParseCondition {
 		const sqlMap: string[] = ['WHERE']  //拼接sql语句
 		const exp: Record<string, string> = {
 			eq: '=',
@@ -149,7 +150,7 @@ export default class Builder {
 					if (has(exp, symbol) && exp[symbol])
 						operatorOption[i] = exp[symbol] //转换操作符
 					if (!key.includes('.')) {   //可能存在table1.name
-						let index:number = aliasTable.indexOf(col.table)    //找是否设置了表别名    table1.name 等价于 a.name
+						let index:number = aliasTable.indexOf(col.table as string)    //找是否设置了表别名    table1.name 等价于 a.name
 						if(index !== -1) {      //存在别名
 							let keys:string[] = toKeys(alias || {})     //找到别名
                             let table:string = keys[index]
@@ -179,7 +180,14 @@ export default class Builder {
 						sqlMap[sqlMap.length - 1] = toUpperCase(condition)
 						sqlMap[sqlMap.length - 2] = 'IS'
 					} else {    //其他情况
-						values.push(condition !== '' ? condition : '')
+						if(isStr(condition) && condition.includes('.')) {
+							let split = condition.split(/\./)
+							if(has(alias, split[0]) && sqlMap[sqlMap.length - 1] === '?') {	//多表查询会用到 tabel1.id = table2.id
+								sqlMap[sqlMap.length - 1] = condition
+							}
+						}else {
+							values.push(condition !== '' ? condition : '')
+						}
 					}
 
 
@@ -314,7 +322,7 @@ export default class Builder {
 	/**
 	 * 解析插入数据
 	 */
-	protected buildInsert(options: Record<string, any>, table: string | string[]): Escape {
+	protected buildInsert(options: Record<string, any>, table: string | string[]): ParseCondition {
 		let currentTable:string = (isArray(table) ? table[0] : table) as string
 		let insert: any = options.insert
 		let comment: any = options.comment
@@ -339,9 +347,9 @@ export default class Builder {
 	/**
 	 * 解析更新数据
 	 */
-	protected buildUpdate(options: any, table: string | string[]): Escape {
+	protected buildUpdate(options: any, table: string | string[]): ParseCondition {
 		const update: Record<string, any> = options.update
-		const where: Escape = this.buildWhere(options.where, options.link)
+		const where: ParseCondition = this.buildWhere(options.where, options.link)
 		if (!where.sql) return { sql: '', values: [] }
 		const keys: string[] = toKeys(update)
         let currentTable:string = (isArray(table) ? table[0] : table) as string
@@ -362,8 +370,8 @@ export default class Builder {
 	/**
 	 * 解析删除
 	 */
-	protected buildDelete(options: any, table: string | string[]): Escape {
-		const where: Escape = this.buildWhere(options.where, options.link)
+	protected buildDelete(options: any, table: string | string[]): ParseCondition {
+		const where: ParseCondition = this.buildWhere(options.where, options.link)
 		if (!where.sql) return { sql: '', values: [] }
         let currentTable:string = (isArray(table) ? table[0] : table) as string
 		let sql: string[] = ['DELETE', 'FROM',currentTable]

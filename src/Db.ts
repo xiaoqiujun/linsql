@@ -36,7 +36,7 @@ export interface ConnectionOptions extends BaseDbOptions,BasePoolOptions {
 	ssl?:string|object
 }
 
-export type Escape = {
+export type ParseCondition = {
 	sql:string,
 	values:any[]
 }
@@ -160,7 +160,7 @@ export default class Db {
 	 * @param options 
 	 * @returns 
 	 */
-	public format(options: Escape): string {
+	public format(options: ParseCondition): string {
 		if (Db.pool) {
 			const sql: string = Db.pool.format(options.sql, options.values)
 			return sql

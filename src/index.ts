@@ -1,4 +1,4 @@
-import { ConnectionOptions,BaseDbOptions,BasePoolOptions,Escape } from './Db';
+import { ConnectionOptions,BaseDbOptions,BasePoolOptions,ParseCondition } from './Db';
 import LinSQL from './Query';
 export {RowRecord} from './Query'
 export {
@@ -18,4 +18,4 @@ export default class linsql {
 		return this.instance
 	}
 }
-export { LinSQL,ConnectionOptions,BaseDbOptions,BasePoolOptions,Escape }
+export { LinSQL,ConnectionOptions,BaseDbOptions,BasePoolOptions,ParseCondition }
