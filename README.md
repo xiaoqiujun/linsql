@@ -1,6 +1,6 @@
 # linsql
 使用TS封装node-mysql的常用操作，可链式调用，与ThinkPHP的查询器类似
-功能还在优化
+部分功能还在优化
 
 
 - [Install](#install)
@@ -31,7 +31,7 @@ prefix| 数据库的前缀 | `string` | 可选
 
 其他配置 [mysqljs/mysql](https://github.com/mysqljs/mysql#connection-options)
 
-### 创建连接
+## 创建连接
 ```js
 import linsql from 'linsql'
 const db = linsql.connect({
@@ -43,7 +43,7 @@ const db = linsql.connect({
 })
 ```
 
-### 基本的查询
+## 基本的查询
 ```js
 import linsql from 'linsql'
 const db = linsql.connect({
@@ -53,13 +53,13 @@ const db = linsql.connect({
 	database: 'school',
 	prefix: 'sc_'
 })
-db.name('teacher').where('username', '').select((rows) => {
+db.name('teacher').where('username', '').select().then(res => {
 	//return [rows]
 })
 ```
 
-### Promise化
-- #### select
+## Promise化
+- ### select
 	```js
 	//select
 	db.name('teacher').where('username', '').select().then(res => {})
@@ -68,7 +68,7 @@ db.name('teacher').where('username', '').select((rows) => {
 		let res = await db.name('teacher').where('username','').find()
 	}
 	```
-- #### update
+- ### update
 	```js
 	db.name('teacher').where('username', '').update({
 		username:'张三'
@@ -77,13 +77,13 @@ db.name('teacher').where('username', '').select((rows) => {
 	})
 	```
 
-- #### delete
+- ### delete
 	```js
 	db.name('teacher').where('username', '').delete().then(res => {
 		console.log(res) //return affected rows
 	})
 	```
-- #### insert
+- ### insert
 	```js
 	db
 	.name('teacher')
@@ -95,7 +95,7 @@ db.name('teacher').where('username', '').select((rows) => {
 		console.log(res)	//return { affectedRows, insertId }
 	})
 	```
-- #### insertGetId
+- ### insertGetId
 	```js
 	db
 	.name('teacher')
@@ -107,7 +107,7 @@ db.name('teacher').where('username', '').select((rows) => {
 		console.log(res)	//return insert Id
 	})
 	```
-- #### query
+- ### query
 	```js
 	db.query("SELECT * FROM `sc_teacher` WHERE `username` = ''").then(res => {
 		//return { affectedRows, insertId }
@@ -117,25 +117,34 @@ db.name('teacher').where('username', '').select((rows) => {
 		//return { affectedRows, insertId }
 	})
 	```
-### Debug
 
+## Methods
 
-### Methods
-
- - #### name (names: string | string[] )
+ - ### name (names: string | string[] ) 主要用于指定操作的数据表(不包含表前缀)
  	```js
 	db.name('teacher').where('username', '').select()
 
 	//SELECT * FROM `sc_teacher` WHERE `username` = ''
  	```
-- #### table (names:string | string[] )
+	### 选择多张表
+	```js
+	db.name(['teacher', 'student'])
+	//SELECT * FROM t_teacher,t_student
+	```
+	### 设置表别名
+	```js
+	db.name(['teacher t', 'student s'])
+	//SELECT * FROM t_teacher AS t,t_student AS s
+	```
+
+- ### table (names:string | string[] ) 主要用于指定操作的数据表(包含表前缀)
 	```js
 	db.table('sc_teacher').where('username', '').select()
 
 	//SELECT * FROM `sc_teacher` WHERE `username` = ''
 	```
 	
-- #### where (field:string|object, operator?:string|number, condition?:string|string[]|number|number[])
+- ### where (field:string|object, operator?:string|number, condition?:string|string[]|number|number[]) 用于数据查询
 	- field 查询的字段 也可以是一段查询表达式 如: 'id is not null'
 	- operator 查询表达式(不区分大小写)
 
@@ -209,7 +218,7 @@ db.name('teacher').where('username', '').select((rows) => {
 	db.name('teacher').where('id', 'null')
 	db.name('teacher').where('id', 'not null')
 	```
-- #### alias (names:string | object )
+- ### alias (names:string | object ) 用于设置当前的数据表的别名
 	```js
 	db.table('sc_teacher').alias('a').where('username', '').select()
 	//SELECT * FROM `sc_teacher` WHERE `username` = ''
@@ -218,13 +227,13 @@ db.name('teacher').where('username', '').select((rows) => {
 		'sc_student':'b'
 	}).where('username', '').select()
 	```
-- #### field (fields:string )
+- ### field (fields:string ) 主要用于返回指定的字段
 	```js
 	db.table('sc_teacher').field('id,username,create_time').where('username', '').select()
 
 	//SELECT id,username,create_time FROM `sc_teacher` WHERE `username` = ''
 	```              
-- #### limit (star:string|number,  end?:number)
+- ### limit (star:string|number,  end?:number) 主要用于分页操作
 	```js
 	db.table('sc_teacher').where('username', '').limit('1,5').select()
 	db.table('sc_teacher').where('username', '').limit(1,5).select()
@@ -235,12 +244,12 @@ db.name('teacher').where('username', '').select((rows) => {
 	db.table('sc_teacher').where('username', '').group('id').select()
 	//SELECT * FROM `sc_teacher` WHERE `username` = '' GROUP BY id
 	``` 
-- #### distinct (isDistinct: boolean)
+- ### distinct (isDistinct: boolean)
 	```js
 	db.table('sc_teacher').field('username').distinct(true).select()
 	//SELECT DISTINCT username FROM `sc_teacher`
 	``` 
-- #### join (table: string, condition: string, joinType:sqlJoinType = 'INNER')
+- ### join (table: string, condition: string, joinType:sqlJoinType = 'INNER')
 	```js
 	type JoinType = 'INNER' | 'LEFT' | 'RIGHT' | 'FULL'
 	db.table('sc_teacher').alias('a').join("sc_student b", "a.username = b.teacher_name").select()
@@ -249,7 +258,7 @@ db.name('teacher').where('username', '').select((rows) => {
 	db.table('sc_teacher').alias('a').where('username', '').join("sc_student b", "a.username = b.teacher_name").select()
 	//SELECT * FROM sc_teacher a INNER JOIN sc_student b ON a.username = b.teacher_name WHERE a.username = ''
 	```
-- #### order (field: string)
+- ### order (field: string)
 	```js
 	db.table('sc_teacher').where('username', '').order('id DESC').select()
 	//SELECT * FROM sc_teacher a WHERE a.username = '' ORDER BY `id` DESC
@@ -257,22 +266,24 @@ db.name('teacher').where('username', '').select((rows) => {
 	db.table('sc_teacher').where('username', '').order('id DESC, username ASC').select()
 	//SELECT * FROM sc_teacher a WHERE a.username = '' ORDER BY `id` DESC, `username` ASC
 	```
-- #### comment (desc: string)
+- ### comment (desc: string) 主要用于写注释,方便后续维护修改
 	```js
 	db.table('sc_teacher').comment("Query sc_teacher").where('username', '').select()
 	//SELECT * FROM sc_teacher a WHERE a.username = ''  ##Query sc_teacher
 	```
-- #### format (sql:string, values:any[])
+- ### transform (sql:string, values:any[]) 主要用于转换sql查询语句
 	```js
-	db.format('SELECT * FROM sc_teacher a WHERE a.username = ?', [''])
+	db.transform('SELECT * FROM sc_teacher a WHERE a.username = ?', [''])
 	//SELECT * FROM sc_teacher a WHERE a.username = ''
 	```
-- #### config (key:string)
+- ### parse () 解析查询器
 	```js
-	db.config('prefix')
-	//return 'sc_'
+	db.name('teacher').where('username', '').parse('prefix')
+	//{
+	//	sql:SELECT * FROM t_teacher WHERE `username` = ?,
+	//	values:['']	
+	//}
 	```
-
 
 
 ## Jest

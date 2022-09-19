@@ -228,7 +228,7 @@ export default class Builder {
 				let name: string = alias[item]
 				let index: number = table.indexOf(name)
 				if (index > -1) {
-					table[index] = `${table[index]} ${item}`        //table1 a, table2 b
+					table[index] = `${table[index]} AS ${item}`        //table1 a, table2 b
 				}
 			})
 			return table.join(',')
