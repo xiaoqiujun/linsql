@@ -278,7 +278,7 @@ db.name('teacher').where('username', '').select().then(res => {
 	```
 - ### parse () 解析查询器
 	```js
-	db.name('teacher').where('username', '').parse('prefix')
+	db.name('teacher').where('username', '').parse()
 	//{
 	//	sql:SELECT * FROM t_teacher WHERE `username` = ?,
 	//	values:['']	
