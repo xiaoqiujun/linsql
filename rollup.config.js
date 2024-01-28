@@ -4,6 +4,7 @@ import commonjs from "rollup-plugin-commonjs";
 import typescript from "rollup-plugin-typescript2";
 import json from "@rollup/plugin-json";
 import babel from "rollup-plugin-babel";
+import copy from 'rollup-plugin-copy';
 import { name, version,dependencies,peerDependencies} from "./package.json";
 const file = (type) => `./${name}.${type}.js`;
 const banner =
@@ -42,5 +43,12 @@ export default {
 		babel({
 			exclude: "node_modules/**",
 		}),
+		copy({
+			targets: [
+				{ src: 'package.json',dest: 'dist' },
+				{ src: 'LICENSE',dest: 'dist' },
+				{ src: 'README.md',dest: 'dist' }
+			]
+		})
 	],
 };
